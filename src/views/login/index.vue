@@ -15,7 +15,7 @@
             <el-input v-model="fromData.code" placeholder="验证码"></el-input>
           </el-col>
           <el-col :span="10" :offset="2">
-            <el-button>获取验证码</el-button>
+            <el-button @click="handleSendCode">获取验证码</el-button>
           </el-col>
         </el-form-item>
         <el-form-item>
@@ -27,12 +27,13 @@
 </template>
 
 <script>
+import axios from 'axios'
 export default {
   name: 'Applogin',
   data () {
     return {
       fromData: {
-        mobile: '',
+        mobile: '15664441107',
         code: ''
       }
     }
@@ -40,6 +41,15 @@ export default {
   methods: {
     onSubmit () {
       console.log('submit!')
+    },
+    handleSendCode () {
+      const { mobile } = this.fromData
+      axios({
+        method: 'GET',
+        url: `http://ttapi.research.itcast.cn/mp/v1_0/captchas/${mobile}`
+      }).then(res => {
+        console.log(res.data)
+      })
     }
   }
 }
