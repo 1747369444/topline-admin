@@ -36,7 +36,8 @@ export default {
       fromData: {
         mobile: '15664441107',
         code: ''
-      }
+      },
+      captchaObj: null // 通过initGeetest得到的极验验证码
     }
   },
   methods: {
@@ -45,11 +46,51 @@ export default {
     },
     handleSendCode () {
       const { mobile } = this.fromData
+
+      if (this.captchaObj) {
+        return this.captchaObj.verify()
+      }
+
       axios({
         method: 'GET',
         url: `http://ttapi.research.itcast.cn/mp/v1_0/captchas/${mobile}`
       }).then(res => {
-        console.log(res.data)
+        // console.log(res.data.data)
+        const data = res.data.data
+        window.initGeetest({
+          // 以下配置参数来自服务端 SDK
+          gt: data.gt,
+          challenge: data.challenge,
+          offline: !data.success,
+          new_captcha: data.new_captcha,
+          product: 'bind' // 隐藏按钮式
+        }, (captchaObj) => {
+          this.captchaObj = captchaObj
+          // 这里可以调用验证实例 captchaObj 的实例方法:验证码对象
+          captchaObj.onReady(function () {
+            // onReady极验提供的一个相当于生命周期的东西
+            captchaObj.verify() // 显示验证码
+          }).onSuccess(function () {
+            // console.log(captchaObj.getValidate())
+            // 解构captchaObj.getValidate()的值
+            const {
+              geetest_challenge: challenge,
+              geetest_seccode: seccode,
+              geetest_validate: validate } =
+              captchaObj.getValidate()
+            axios({
+              method: 'GET',
+              url: `http://ttapi.research.itcast.cn/mp/v1_0/sms/codes/${mobile}`,
+              params: {
+                challenge,
+                seccode,
+                validate
+              }
+            }).then(res => {
+              console.log(res.data)
+            })
+          })
+        })
       })
     }
   }
