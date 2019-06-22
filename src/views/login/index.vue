@@ -5,12 +5,12 @@
         <img src="./logo_index.png" alt="黑马头条">
       </div>
       <div class="login-form"></div>
-      <el-form ref="form" :model="fromData">
-        <el-form-item>
+      <el-form ref="form" :model="fromData" :rules="rules">
+        <el-form-item prop="mobile">
           <el-input v-model="fromData.mobile" placeholder="手机号"></el-input>
         </el-form-item>
         <!-- 支持栅格布局 -->
-        <el-form-item>
+        <el-form-item prop="code">
           <el-col :span="10">
             <el-input v-model="fromData.code" placeholder="验证码"></el-input>
           </el-col>
@@ -19,7 +19,12 @@
           </el-col>
         </el-form-item>
         <el-form-item>
-          <el-button class="btn-login" type="primary" @click="handleLogin">登录</el-button>
+          <el-button
+            class="btn-login"
+            type="primary"
+            :loading="loginloading"
+            @click="handleLogin"
+          >登录</el-button>
         </el-form-item>
       </el-form>
     </div>
@@ -33,16 +38,39 @@ export default {
   name: 'Applogin',
   data () {
     return {
-      fromData: {
-        mobile: '15664441107',
+
+      fromData: {// 表单数据
+        mobile: '',
         code: ''
       },
+      loginloading: false, // 登录按钮的loading状态
+      rules: {// 表单验证规则
+        mobile: [
+          { required: true, message: '请输入正确手机号', trigger: 'blur' },
+          { len: 11, message: '长度必须为11个字符', trigger: 'blur' }
+        ],
+        code: [
+          { required: true, message: '请输入验证码', trigger: 'blur' },
+          { len: 6, message: '长度必须为6个字符', trigger: 'blur' }
+        ]
+      },
+
       captchaObj: null // 通过initGeetest得到的极验验证码
     }
   },
   methods: {
     handleLogin () {
-      //   console.log('submit!')
+      this.$refs['form'].validate(valid => {
+        if (!valid) {
+          return
+        }
+        // 表单验证成功，才提交登录
+        this.submitLogin()
+      })
+    },
+
+    submitLogin () {
+      this.loginloading = true
       axios({
         method: 'POST',
         url: 'http://ttapi.research.itcast.cn/mp/v1_0/authorizations',
@@ -53,6 +81,9 @@ export default {
           message: '恭喜你,登录成功！！！',
           type: 'success'
         })
+
+        this.loginloading = false
+
         this.$router.push({
           name: 'home'
         })
@@ -61,8 +92,10 @@ export default {
         if (err.request.status === 400) {
           this.$message.error('登录失败，手机号或验证码错误！！！')
         }
+        this.loginloading = false
       })
     },
+
     handleSendCode () {
       const { mobile } = this.fromData
 
