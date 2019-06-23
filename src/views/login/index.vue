@@ -15,8 +15,20 @@
             <el-input v-model="fromData.code" placeholder="验证码"></el-input>
           </el-col>
           <el-col :span="10" :offset="2">
-            <el-button @click="handleSendCode">获取验证码</el-button>
+            <el-button
+              @click="handleSendCode"
+              :disabled="!!codeTimer"
+            >{{codeTimer?`剩余${codeSecons}秒`:'获取验证码'}}</el-button>
           </el-col>
+        </el-form-item>
+        <!-- 多选框 -->
+        <el-form-item prop="agree">
+          <el-checkbox v-model="fromData.agree"></el-checkbox>
+          <span>
+            我已阅读并同意
+            <a href="#">用户协议</a>和
+            <a href="#">隐私条款</a>
+          </span>
         </el-form-item>
         <el-form-item>
           <el-button
@@ -34,6 +46,7 @@
 <script>
 import axios from 'axios'
 import '@/vendor/gt'
+const initCodeSeconds = 20
 export default {
   name: 'Applogin',
   data () {
@@ -41,7 +54,8 @@ export default {
 
       fromData: {// 表单数据
         mobile: '',
-        code: ''
+        code: '',
+        agree: ''// 是否同意用户协议
       },
       loginloading: false, // 登录按钮的loading状态
       rules: {// 表单验证规则
@@ -52,10 +66,16 @@ export default {
         code: [
           { required: true, message: '请输入验证码', trigger: 'blur' },
           { len: 6, message: '长度必须为6个字符', trigger: 'blur' }
+        ],
+        agree: [
+          { required: true, message: '请同意用户协议', trigger: 'change' },
+          { pattern: /true/, message: '请同意用户协议', trigger: 'change' }
         ]
       },
-
-      captchaObj: null // 通过initGeetest得到的极验验证码
+      captchaObj: null, // 通过initGeetest得到的极验验证码
+      codeTimer: null, // 倒计时定时器
+      codeSecons: initCodeSeconds, // 倒计时的时间
+      sendMobile: '' // 保存初始化验证码之后发送短信的手机号
     }
   },
   methods: {
@@ -97,15 +117,46 @@ export default {
     },
 
     handleSendCode () {
-      const { mobile } = this.fromData
+      // console.log(errorMessage)这个是哪个错误消息如果moblie通过是空字符串
+      // 校验手机号是否有效
+      this.$refs['form'].validateField('mobile', errorMessage => {
+        if (errorMessage.trim().length > 0) {
+          return
+        }
+        // // 手机号码有效，初始化验证码插件
+        // this.showGeetest()
 
-      if (this.captchaObj) {
-        return this.captchaObj.verify()
-      }
+        // 手机号验证通过
+        if (this.captchaObj) {
+          // 手机号码有效，初始化验证码插件
+          // this.showGeetest()
+          // 如果用户输入的手机号和之前初始化的验证码手机号不一致，就基于当前手机号码重新初始化
+          // 否则，直接 verify 显示
+          if (this.fromData.mobile !== this.sendMobile) {
+            // 手机号发生改变,从新初始化验证码插件
+
+            // 重新初始化之前，将原来的验证码插件生成的DOM删除
+            document.body.removeChild(document.querySelector('.geetest_panel'))
+
+            // 重新初始化
+            this.showGeetest()
+          } else {
+            // 手机号一致的话，直接verify
+            this.captchaObj.verify()
+          }
+        } else {
+          // 这是第一次初始化的验证码插件
+          this.showGeetest()
+        }
+      })
+    },
+
+    showGeetest () {
+      // 函数中的 function 定义的函数中的 this 指向 window
 
       axios({
         method: 'GET',
-        url: `http://ttapi.research.itcast.cn/mp/v1_0/captchas/${mobile}`
+        url: `http://ttapi.research.itcast.cn/mp/v1_0/captchas/${this.fromData.mobile}`
       }).then(res => {
         // console.log(res.data.data)
         const data = res.data.data
@@ -119,10 +170,10 @@ export default {
         }, (captchaObj) => {
           this.captchaObj = captchaObj
           // 这里可以调用验证实例 captchaObj 的实例方法:验证码对象
-          captchaObj.onReady(function () {
+          captchaObj.onReady(() => {
             // onReady极验提供的一个相当于生命周期的东西
             captchaObj.verify() // 显示验证码
-          }).onSuccess(function () {
+          }).onSuccess(() => {
             // console.log(captchaObj.getValidate())
             // 解构captchaObj.getValidate()的值
             const {
@@ -132,21 +183,39 @@ export default {
               captchaObj.getValidate()
             axios({
               method: 'GET',
-              url: `http://ttapi.research.itcast.cn/mp/v1_0/sms/codes/${mobile}`,
+              url: `http://ttapi.research.itcast.cn/mp/v1_0/sms/codes/${this.fromData.mobile}`,
               params: {
                 challenge,
                 seccode,
                 validate
               }
             }).then(res => {
-              console.log(res.data)
+              // console.log(res.data)
+              // 发送短信之后，才开始倒计时
+              this.codeCountDown()
             })
           })
         })
       })
+    },
+    //
+    // 倒计时
+    //
+    codeCountDown () {
+      this.codeTimer = window.setInterval(() => {
+        // 时间--
+        this.codeSecons--
+        if (this.codeSecons <= 0) {
+          this.codeSecons = initCodeSeconds // 让倒计时时间回到初始状态
+          window.clearInterval(this.codeTimer) // 清除定时器
+          this.codeTimer = null // 清除倒计时的标记
+        }
+      }, 1000)
     }
+
   }
 }
+
 </script>
 
 <style lang="less" scoped>
@@ -169,6 +238,9 @@ export default {
     .btn-login {
       width: 100%;
     }
+  }
+  a {
+    text-decoration: none;
   }
 }
 </style>
