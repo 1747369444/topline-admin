@@ -4,13 +4,14 @@
       class="el-menu-vertical-demo"
       @open="handleOpen"
       @close="handleClose"
+      router
       background-color="#545c64"
       text-color="#fff"
       active-text-color="#ffd04b">
       <div class="images">
         <img src="./logo_admin.png" alt="黑马头条" width="120">
       </div>
-       <el-menu-item index="3">
+       <el-menu-item index="/">
         <i class="iconfont iconHOMEMESSAGE"></i>
         <span slot="title">首页</span>
       </el-menu-item>
