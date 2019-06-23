@@ -1,12 +1,12 @@
 <template>
   <el-container>
-    <el-aside width="200px">Aside</el-aside>
+    <el-aside width="200px"><AppAside></AppAside></el-aside>
     <el-container>
       <el-header>
         <AppHeader></AppHeader>
       </el-header>
       <el-main>
-        <AppAside></AppAside>
+        <p>内容区域</p>
       </el-main>
     </el-container>
   </el-container>
