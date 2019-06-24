@@ -4,6 +4,7 @@ import ElementUI from 'element-ui'
 import 'element-ui/lib/theme-chalk/index.css'
 import App from './App.vue'
 import './styles/index.less'
+import 'nprogress/nprogress.css'
 
 Vue.use(ElementUI)
 
