@@ -44,7 +44,7 @@
 </template>
 
 <script>
-import axios from 'axios'
+// import axios from 'axios'
 import '@/vendor/gt'
 const initCodeSeconds = 20
 export default {
@@ -92,9 +92,9 @@ export default {
 
     submitLogin () {
       this.loginloading = true
-      axios({
+      this.$http({
         method: 'POST',
-        url: 'http://ttapi.research.itcast.cn/mp/v1_0/authorizations',
+        url: '/authorizations',
         data: this.fromData
       }).then(res => {
         //   console.log(res.data)
@@ -159,9 +159,9 @@ export default {
 
       // 初始化验证码期间，禁用获取验证按钮
       this.codeLoading = true
-      axios({
+      this.$http({
         method: 'GET',
-        url: `http://ttapi.research.itcast.cn/mp/v1_0/captchas/${this.fromData.mobile}`
+        url: `/captchas/${this.fromData.mobile}`
       }).then(res => {
         // console.log(res.data.data)
         const data = res.data.data
@@ -188,9 +188,9 @@ export default {
               geetest_seccode: seccode,
               geetest_validate: validate } =
               captchaObj.getValidate()
-            axios({
+            this.$http({
               method: 'GET',
-              url: `http://ttapi.research.itcast.cn/mp/v1_0/sms/codes/${this.fromData.mobile}`,
+              url: `/sms/codes/${this.fromData.mobile}`,
               params: {
                 challenge,
                 seccode,
