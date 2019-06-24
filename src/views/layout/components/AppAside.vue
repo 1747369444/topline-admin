@@ -18,10 +18,11 @@
         <el-submenu index="1">
         <template slot="title">
           <i class="iconfont iconxuanyunbiaoqing"></i>
-          <span>内容管理</span>
+          <!-- <span>内容管理</span> -->
+          <span>内容</span>
         </template>
         <el-menu-item-group>
-          <el-menu-item index="1-1">发布文章</el-menu-item>
+          <el-menu-item index="/publish">发布文章</el-menu-item>
           <el-menu-item index="1-2">内容列表</el-menu-item>
         </el-menu-item-group>
         <el-menu-item-group>

@@ -6,7 +6,8 @@
         <AppHeader></AppHeader>
       </el-header>
       <el-main>
-        <p>内容区域</p>
+        <!-- <p>内容区域</p> -->
+        <router-view></router-view>
       </el-main>
     </el-container>
   </el-container>
