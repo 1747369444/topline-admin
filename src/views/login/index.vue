@@ -98,6 +98,8 @@ export default {
         data: this.fromData
       }).then(res => {
         //   console.log(res.data)
+        // 登录 成功将接口返回的登录信息存储到本地存储中方便后续使用
+        window.localStorage.setItem('user_info', JSON.stringify(res.data.data))
         this.$message({
           message: '恭喜你,登录成功！！！',
           type: 'success'
