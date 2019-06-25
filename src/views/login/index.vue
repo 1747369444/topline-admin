@@ -96,10 +96,10 @@ export default {
         method: 'POST',
         url: '/authorizations',
         data: this.fromData
-      }).then(res => {
+      }).then(data => {
         //   console.log(res.data)
         // 登录 成功将接口返回的登录信息存储到本地存储中方便后续使用
-        window.localStorage.setItem('user_info', JSON.stringify(res.data.data))
+        window.localStorage.setItem('user_info', JSON.stringify(data))
         this.$message({
           message: '恭喜你,登录成功！！！',
           type: 'success'
@@ -162,9 +162,9 @@ export default {
       this.$http({
         method: 'GET',
         url: `/captchas/${this.fromData.mobile}`
-      }).then(res => {
+      }).then(data => {
         // console.log(res.data.data)
-        const data = res.data.data
+        // const data = res.data.data
         window.initGeetest({
           // 以下配置参数来自服务端 SDK
           gt: data.gt,
@@ -196,7 +196,7 @@ export default {
                 seccode,
                 validate
               }
-            }).then(res => {
+            }).then(data => {
               // console.log(res.data)
               // 发送短信之后，才开始倒计时
               this.codeCountDown()

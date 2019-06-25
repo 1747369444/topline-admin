@@ -43,7 +43,7 @@
         </el-form-item>
         <el-form-item label="时间选择:">
           <el-date-picker
-            v-model="value1"
+            v-model="form.value1"
             type="daterange"
             range-separator="至"
             start-placeholder="开始日期"
@@ -71,6 +71,7 @@
 </template>
 
 <script>
+// const userInfo = JSON.parse(window.localStorage.getItem('user_info'))
 export default {
   name: 'ArticleList',
   data () {
@@ -104,6 +105,17 @@ export default {
         address: '上海市普陀区金沙江路 1516 弄'
       }]
     }
+  },
+  created () {
+    this.$http({
+      method: 'GET',
+      url: '/articles'
+      // headers: { // 自定义发送请求头
+      //   Authorization: `Bearer ${userInfo.token}`
+      // }
+    }).then(res => {
+      console.log(res)
+    })
   },
   methods: {
     onSubmit () {
