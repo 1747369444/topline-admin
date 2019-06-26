@@ -67,9 +67,11 @@ router.beforeEach((to, from, next) => {
     }
   }
 })
+
 // 路由导航完成后进入这里
 router.afterEach((to, from) => {
   nprogress.done()
 })
+
 // 导出router
 export default router

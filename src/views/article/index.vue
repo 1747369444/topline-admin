@@ -61,12 +61,34 @@
       <div slot="header" class="clearfix">
         <span>共找到15条符合条件的内容</span>
       </div>
-      <el-table class="list-table" :data="tableData" style="width: 100%">
-        <el-table-column prop="date" label="日期" width="180"></el-table-column>
-        <el-table-column prop="name" label="姓名" width="180"></el-table-column>
-        <el-table-column prop="address" label="地址"></el-table-column>
+      <el-table class="list-table" :data="tableData" style="width: 100%" v-loading="articleLoading">
+        <el-table-column label="封面" width="80">
+          <!-- prop="cover.images[0]"  -->
+          <!-- 表格列的默认项只输出文本需要就自定义↓ -->
+          <!-- slot-scope="scope"是插槽作用域，scope是起的一名scope中有个成员叫row，scope.row是当前的遍历项对象 -->
+          <!-- <template slot-scope="scope">
+            <img :src="scope.row.cover.images[0]" alt>
+          </template>-->
+        </el-table-column>
+        <el-table-column prop="title" label="标题" width="180"></el-table-column>
+        <el-table-column prop="pubdate" label="发布日期"></el-table-column>
+        <el-table-column prop="status" label="状态"></el-table-column>
+        <el-table-column prop="status" label="状态">
+          <template slot-scope="scope">
+            <el-button type="success" plain>修改</el-button>
+            <el-button type="danger" plain @click="handleDelete(scope.row)">删除</el-button>
+          </template>
+        </el-table-column>
       </el-table>
     </el-card>
+    <!-- 分页 -->
+    <el-pagination
+      background
+      layout="prev, pager, next"
+      :total="totalCount"
+      @current-change="handleCurrentChange"
+      :disabled="articleLoading"
+    ></el-pagination>
   </div>
 </template>
 
@@ -87,39 +109,70 @@ export default {
         desc: '',
         value1: ''
       },
-      tableData: [{
-        date: '2016-05-02',
-        name: '王小虎',
-        address: '上海市普陀区金沙江路 1518 弄'
-      }, {
-        date: '2016-05-04',
-        name: '王小虎',
-        address: '上海市普陀区金沙江路 1517 弄'
-      }, {
-        date: '2016-05-01',
-        name: '王小虎',
-        address: '上海市普陀区金沙江路 1519 弄'
-      }, {
-        date: '2016-05-03',
-        name: '王小虎',
-        address: '上海市普陀区金沙江路 1516 弄'
-      }]
+      tableData: [],
+      totalCount: 0,
+      articleLoading: false
+
     }
   },
   created () {
-    this.$http({
-      method: 'GET',
-      url: '/articles'
-      // headers: { // 自定义发送请求头
-      //   Authorization: `Bearer ${userInfo.token}`
-      // }
-    }).then(res => {
-      console.log(res)
-    })
+    this.loadArticles()
   },
   methods: {
+    // 获取文章展示数据
+    loadArticles (page = 1) { // 函数参数的默认值不传默认为1传了就用传的
+      this.articleLoading = true // 请求时禁用分页&表格加载
+      this.$http({
+        method: 'GET',
+        url: '/articles',
+        params: {
+          page, // 请求数据的页码，不传默认为1
+          per_page: 10 // 请求数据的每页大小，不传默认为10
+        }
+        // headers: { // 自定义发送请求头
+        // Authorization: `Bearer ${userInfo.token}`
+        // }
+      }).then(data => {
+        // console.log(data)
+        this.tableData = data.results // 列表数据
+        this.totalCount = data.total_count// 数据总数
+        this.articleLoading = false// 请求完成分页能点&表格显示
+      })
+    },
     onSubmit () {
       console.log('submit!')
+    },
+    // 分页
+    handleCurrentChange (page) {
+      // 页码改变请求页码对应的数据
+      this.loadArticles(page)
+    },
+    // 删除
+    handleDelete (articles) {
+      this.$confirm('确定删除吗, 是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        // 发送请求删除
+        this.$http({
+          method: 'DELETE',
+          url: `/articles/${articles.id}`
+        }).then(data => {
+          this.$message({
+            type: 'success',
+            message: '删除成功!'
+          })
+          // 重新加载数据列表
+          this.loadArticles(this.page)
+        })
+      }).catch(() => {
+        this.$message({
+          type: 'info',
+          message: '已取消删除'
+        })
+      })
+      // console.log(articles)
     }
   }
 }
