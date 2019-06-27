@@ -5,45 +5,31 @@
       <div slot="header" class="clearfix">
         <span>全部图文</span>
       </div>
-      <el-form ref="form" :model="form" label-width="80px">
+      <el-form ref="form" :model="filterParams" label-width="80px">
         <el-form-item label="文章状态:">
-          <el-radio-group v-model="form.resource">
-            <el-radio label="全部"></el-radio>
-            <el-radio label="草稿"></el-radio>
-            <el-radio label="待审核"></el-radio>
-            <el-radio label="审核通过"></el-radio>
-            <el-radio label="审核失败"></el-radio>
+          <el-radio-group v-model="filterParams.status">
+            <el-radio label>全部</el-radio>
+            <el-radio
+              v-for="(item,index) in statTypes"
+              :key="item.label"
+              :label="index+''"
+            >{{item.label}}</el-radio>
           </el-radio-group>
         </el-form-item>
         <el-form-item label="频道列表:">
-          <el-select v-model="form.region" placeholder="请选择">
-            <el-option label="css" value="shanghai"></el-option>
-            <el-option label="数据库" value="beijing"></el-option>
-            <el-option label="区块链" value="beijing"></el-option>
-            <el-option label="go" value="beijing"></el-option>
-            <el-option label="产品" value="beijing"></el-option>
-            <el-option label="后端" value="beijing"></el-option>
-            <el-option label="linux" value="beijing"></el-option>
-            <el-option label="人工智能" value="beijing"></el-option>
-            <el-option label="php" value="beijing"></el-option>
-            <el-option label="javascript" value="beijing"></el-option>
-            <el-option label="架构" value="beijing"></el-option>
-            <el-option label="前端" value="beijing"></el-option>
-            <el-option label="python" value="beijing"></el-option>
-            <el-option label="java" value="beijing"></el-option>
-            <el-option label="算法" value="beijing"></el-option>
-            <el-option label="面试" value="beijing"></el-option>
-            <el-option label="科技动态" value="beijing"></el-option>
-            <el-option label="js" value="beijing"></el-option>
-            <el-option label="设计" value="beijing"></el-option>
-            <el-option label="数码产品" value="beijing"></el-option>
-            <el-option label="html" value="beijing"></el-option>
-            <el-option label="软件测试" value="beijing"></el-option>
+          <el-select v-model="filterParams.channel_id" placeholder="请选择">
+            <el-option
+            v-for="item in channels"
+            :key="item.id"
+            :label="item.name"
+            :value="item.id"></el-option>
           </el-select>
         </el-form-item>
         <el-form-item label="时间选择:">
           <el-date-picker
-            v-model="form.value1"
+            v-model="begin_end_pubdate"
+            value-format="yyyy-MM-dd"
+            @change="handleDateChange"
             type="daterange"
             range-separator="至"
             start-placeholder="开始日期"
@@ -52,14 +38,17 @@
         </el-form-item>
 
         <el-form-item>
-          <el-button type="primary" @click="onSubmit">查询</el-button>
+          <el-button type="primary" :loading="articleLoading" @click="onSubmit">查询</el-button>
         </el-form-item>
       </el-form>
     </el-card>
     <!-- 展示列表表格 -->
     <el-card class="list-card">
       <div slot="header" class="clearfix">
-        <span>共找到15条符合条件的内容</span>
+        <span>
+          共找到
+          <strong>{{totalCount}}</strong>条符合条件的内容
+        </span>
       </div>
       <el-table class="list-table" :data="tableData" style="width: 100%" v-loading="articleLoading">
         <el-table-column label="封面" width="80">
@@ -73,7 +62,7 @@
         <el-table-column prop="title" label="标题" width="180"></el-table-column>
         <el-table-column prop="pubdate" label="发布日期"></el-table-column>
         <el-table-column label="状态">
-         <template slot-scope="scope">
+          <template slot-scope="scope">
             <el-tag :type="statTypes[scope.row.status].type">{{ statTypes[scope.row.status].label }}</el-tag>
           </template>
         </el-table-column>
@@ -102,21 +91,11 @@ export default {
   name: 'ArticleList',
   data () {
     return {
-      form: {
-        name: '',
-        region: '',
-        date1: '',
-        date2: '',
-        delivery: false,
-        type: [],
-        resource: '',
-        desc: '',
-        value1: ''
-      },
-      tableData: [],
-      totalCount: 0,
-      articleLoading: false,
-      statTypes: [
+      tableData: [], // 数据列表
+      totalCount: 0, // 总数据条数
+      articleLoading: false, // 控制文档加载中的 loading 效果
+      page: 1, // 当前页码
+      statTypes: [ // 文章状态
         {
           type: 'info',
           label: '草稿'
@@ -137,23 +116,42 @@ export default {
           type: 'danger',
           label: '已删除'
         }
-      ]
-
+      ],
+      channels: [], // 频道列表
+      filterParams: { // 文章查询条件参数
+        status: '', // 文章状态
+        channel_id: '', // 频道id
+        begin_pubdate: '', // 开始时间
+        end_pubdate: '' // 结束时间
+      },
+      begin_end_pubdate: [] // 存储日期选择器同步的 [开始时间，结束时间]，这个字段没啥用，
+      // 只是日期选择器必须 v-mode 绑定一个数据才会触发 change 事件
     }
   },
   created () {
+    // 加载文章列表
     this.loadArticles()
+    // 加载频道列表
+    this.loadChannels()
   },
   methods: {
     // 获取文章展示数据
     loadArticles (page = 1) { // 函数参数的默认值不传默认为1传了就用传的
       this.articleLoading = true // 请求时禁用分页&表格加载
+      // 过滤出有效的查询条件字段
+      const filterData = {}
+      for (let key in this.filterParams) {
+        if (this.filterParams[key]) {
+          filterData[key] = this.filterParams[key]
+        }
+      }
       this.$http({
         method: 'GET',
         url: '/articles',
         params: {
           page, // 请求数据的页码，不传默认为1
-          per_page: 10 // 请求数据的每页大小，不传默认为10
+          per_page: 10, // 请求数据的每页大小，不传默认为10
+          ...filterData// 将对象解构混入当前对象，说白就是对象拷贝
         }
         // headers: { // 自定义发送请求头
         // Authorization: `Bearer ${userInfo.token}`
@@ -165,8 +163,19 @@ export default {
         this.articleLoading = false// 请求完成分页能点&表格显示
       })
     },
+    // 获取频道列表
+    loadChannels () {
+      this.$http({
+        method: 'GET',
+        url: '/channels'
+      }).then(data => {
+        this.channels = data.channels
+        // console.log(data.channels)
+      })
+    },
     onSubmit () {
-      console.log('submit!')
+      // console.log('submit!')
+      this.loadArticles()
     },
     // 分页
     handleCurrentChange (page) {
@@ -199,6 +208,11 @@ export default {
         })
       })
       // console.log(articles)
+    },
+    //  日期选择组件改变事件
+    handleDateChange (value) {
+      this.filterParams.begin_pubdate = value[0]
+      this.filterParams.end_pubdate = value[1]
     }
   }
 }
