@@ -6,23 +6,20 @@
         <span>全部图文</span>
       </div>
       <el-form ref="form" :model="filterParams" label-width="80px">
-        <el-form-item label="文章状态:">
+        <el-form-item label="文章状态">
           <el-radio-group v-model="filterParams.status">
             <el-radio label>全部</el-radio>
             <el-radio
-              v-for="(item,index) in statTypes"
+              v-for="(item, index) in statTypes"
               :key="item.label"
-              :label="index+''"
-            >{{item.label}}</el-radio>
+              :label="index + ''"
+            >{{ item.label }}</el-radio>
           </el-radio-group>
         </el-form-item>
-        <el-form-item label="频道列表:">
-          <el-select v-model="filterParams.channel_id" placeholder="请选择">
-            <el-option
-            v-for="item in channels"
-            :key="item.id"
-            :label="item.name"
-            :value="item.id"></el-option>
+        <el-form-item label="频道列表">
+          <el-select v-model="filterParams.channel_id" placeholder="请选择活动区域">
+            <el-option label="全部" value></el-option>
+            <el-option v-for="item in channels" :key="item.id" :label="item.name" :value="item.id"></el-option>
           </el-select>
         </el-form-item>
         <el-form-item label="时间选择:">
@@ -79,8 +76,9 @@
       background
       layout="prev, pager, next"
       :total="totalCount"
-      @current-change="handleCurrentChange"
       :disabled="articleLoading"
+      :current-page="page"
+      @current-change="handleCurrentChange"
     ></el-pagination>
   </div>
 </template>
@@ -173,12 +171,15 @@ export default {
         // console.log(data.channels)
       })
     },
+    // 查询
     onSubmit () {
       // console.log('submit!')
-      this.loadArticles()
+      this.page = 1 // 让页码回到第一页
+      this.loadArticles() // 加载第一页数据
     },
     // 分页
     handleCurrentChange (page) {
+      this.page = page
       // 页码改变请求页码对应的数据
       this.loadArticles(page)
     },
@@ -214,6 +215,7 @@ export default {
       this.filterParams.begin_pubdate = value[0]
       this.filterParams.end_pubdate = value[1]
     }
+
   }
 }
 </script>
