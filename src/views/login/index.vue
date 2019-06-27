@@ -53,8 +53,8 @@ export default {
     return {
 
       fromData: {// 表单数据
-        mobile: '',
-        code: '',
+        mobile: '15664441107',
+        code: '246810',
         agree: ''// 是否同意用户协议
       },
       loginloading: false, // 登录按钮的loading状态

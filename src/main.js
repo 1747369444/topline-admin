@@ -14,8 +14,8 @@ import JSONbig from 'json-bigint'
 
 // 配置基础路由
 Vue.prototype.$http = axios
-// axios.defaults.baseURL = 'http://ttapi.research.itcast.cn/mp/v1_0/'
-axios.defaults.baseURL = 'http://toutiao.course.itcast.cn/mp/v1_0/'
+axios.defaults.baseURL = 'http://ttapi.research.itcast.cn/mp/v1_0/'
+// axios.defaults.baseURL = 'http://toutiao.course.itcast.cn/mp/v1_0/'
 
 // 使用JSONbig处理返回数据中超出JS安全整数范围会导致整数无法精确表示
 axios.defaults.transformResponse = [function (data) {

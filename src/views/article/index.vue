@@ -66,14 +66,18 @@
           <!-- prop="cover.images[0]"  -->
           <!-- 表格列的默认项只输出文本需要就自定义↓ -->
           <!-- slot-scope="scope"是插槽作用域，scope是起的一名scope中有个成员叫row，scope.row是当前的遍历项对象 -->
-          <!-- <template slot-scope="scope">
-            <img :src="scope.row.cover.images[0]" alt>
-          </template>-->
+          <template slot-scope="scope">
+            <img width="60" :src="scope.row.cover.images[0]" alt>
+          </template>
         </el-table-column>
         <el-table-column prop="title" label="标题" width="180"></el-table-column>
         <el-table-column prop="pubdate" label="发布日期"></el-table-column>
-        <el-table-column prop="status" label="状态"></el-table-column>
-        <el-table-column prop="status" label="状态">
+        <el-table-column label="状态">
+         <template slot-scope="scope">
+            <el-tag :type="statTypes[scope.row.status].type">{{ statTypes[scope.row.status].label }}</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column prop="status" label="操作">
           <template slot-scope="scope">
             <el-button type="success" plain>修改</el-button>
             <el-button type="danger" plain @click="handleDelete(scope.row)">删除</el-button>
@@ -111,7 +115,29 @@ export default {
       },
       tableData: [],
       totalCount: 0,
-      articleLoading: false
+      articleLoading: false,
+      statTypes: [
+        {
+          type: 'info',
+          label: '草稿'
+        },
+        {
+          type: '',
+          label: '待审核'
+        },
+        {
+          type: 'success',
+          label: '审核通过'
+        },
+        {
+          type: 'warning',
+          label: '审核失败'
+        },
+        {
+          type: 'danger',
+          label: '已删除'
+        }
+      ]
 
     }
   },
