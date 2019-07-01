@@ -3,11 +3,13 @@
     <div slot="header" class="header">
       <span>发布文章</span>
       <div>
-        <el-button type="success" @click="handlePublish(false)">发布</el-button>
+        <!-- <el-button type="success" @click="handlePublish(false)">发布</el-button> -->
+        <el-button type="success" @click="handlePublish(false)">{{ isEdit ? '更新' : '发布' }}</el-button>
         <el-button type="primary" @click="handlePublish(true)">存入草稿</el-button>
       </div>
     </div>
-    <el-form v-loading="$route.name === 'publish-edit' && editLoading">
+    <!-- <el-form v-loading="$route.name === 'publish-edit' && editLoading"> -->
+    <el-form v-loading="isEdit && editLoading">
       <el-form-item>
         <el-input type="text" v-model="articleForm.title" placeholder="标题"></el-input>
       </el-form-item>
@@ -71,13 +73,14 @@ export default {
   computed: {
     editor () {
       return this.$refs.myQuillEditor.quill
+    },
+    isEdit () {
+      return this.$route.name === 'publish-edit'
     }
   },
 
   created () {
-    if (this.$route.name === 'publish-edit') {
-      this.loadArticle()
-    }
+    this.isEdit && this.loadArticle()
   },
 
   mounted () {
