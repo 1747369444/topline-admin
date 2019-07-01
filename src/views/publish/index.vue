@@ -4,8 +4,12 @@
       <span>发布文章</span>
       <div>
         <!-- <el-button type="success" @click="handlePublish(false)">发布</el-button> -->
-        <el-button type="success" @click="handlePublish(false)">{{ isEdit ? '更新' : '发布' }}</el-button>
-        <el-button type="primary" @click="handlePublish(true)">存入草稿</el-button>
+        <el-button
+          type="success"
+          :loading="publishLoading"
+          @click="handlePublish(false)"
+        >{{ isEdit ? '更新' : '发布' }}</el-button>
+        <el-button type="primary" :loading="publishLoading" @click="handlePublish(true)">存入草稿</el-button>
       </div>
     </div>
     <!-- <el-form v-loading="$route.name === 'publish-edit' && editLoading"> -->
@@ -67,7 +71,8 @@ export default {
         channel_id: '' // 频道
       },
       editorOption: {}, // 富文本编辑器相关参数选项
-      editLoading: false
+      editLoading: false,
+      publishLoading: false
     }
   },
   computed: {
@@ -76,6 +81,9 @@ export default {
     },
     isEdit () {
       return this.$route.name === 'publish-edit'
+    },
+    articleId () {
+      return this.$route.params.id
     }
   },
 
@@ -92,7 +100,7 @@ export default {
       this.editLoading = true
       this.$http({
         method: 'GET',
-        url: `/articles/${this.$route.params.id}`
+        url: `/articles/${this.articleId}`
       }).then(data => {
         this.articleForm = data
         this.editLoading = false
@@ -102,11 +110,49 @@ export default {
       })
     },
     handlePublish (draft = false) {
-      this.$http({
+      this.publishLoading = true // 禁用按钮的点击状态
+      if (this.isEdit) {
+        // 执行编辑操作
+        this.submitEdit(draft).then(() => {
+          this.publishLoading = false
+        })
+      } else {
+        // 执行添加操作
+        this.submitAdd(draft).then(() => {
+          this.publishLoading = false
+        })
+      }
+    },
+
+    submitEdit (draft) {
+      return this.$http({
+        method: 'PUT',
+        url: `/articles/${this.articleId}`,
+        data: {
+          title: this.articleForm.title,
+          content: this.articleForm.content,
+          cover: this.articleForm.cover,
+          channel_id: this.articleForm.channel_id
+        }, // 请求体参数
+        params: { // 查询字符串参数
+          draft
+        }
+      }).then(data => {
+        this.$message({
+          type: 'success',
+          message: '更新成功'
+        })
+      }).catch(err => {
+        console.log(err)
+        this.$message.error('更新失败')
+      })
+    },
+    submitAdd (draft) {
+      return this.$http({
         method: 'POST',
         url: '/articles',
         data: this.articleForm, // 请求体参数
-        params: {// 查询字符串参数
+        params: { // 查询字符串参数
           draft
         }
       }).then(data => {
