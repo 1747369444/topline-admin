@@ -17,11 +17,13 @@
           </el-radio-group>
         </el-form-item>
         <el-form-item label="频道列表">
-          <el-select v-model="filterParams.channel_id" placeholder="请选择活动区域">
+          <!-- <el-select v-model="filterParams.channel_id" placeholder="请选择活动区域">
             <el-option label="全部" value></el-option>
             <el-option v-for="item in channels" :key="item.id" :label="item.name" :value="item.id"></el-option>
-          </el-select>
+          </el-select>-->
+          <article-channel v-model="filterParams.channel_id"></article-channel>
         </el-form-item>
+
         <el-form-item label="时间选择:">
           <el-date-picker
             v-model="begin_end_pubdate"
@@ -53,7 +55,7 @@
           <!-- 表格列的默认项只输出文本需要就自定义↓ -->
           <!-- slot-scope="scope"是插槽作用域，scope是起的一名scope中有个成员叫row，scope.row是当前的遍历项对象 -->
           <template slot-scope="scope">
-            <img width="60" :src="scope.row.cover.images[0]" alt>
+            <img width="60" :src="scope.row.cover.images[0]" alt />
           </template>
         </el-table-column>
         <el-table-column prop="title" label="标题" width="180"></el-table-column>
@@ -84,9 +86,14 @@
 </template>
 
 <script>
+import ArticleChannel from '@/components/article-channel'
 // const userInfo = JSON.parse(window.localStorage.getItem('user_info'))
 export default {
   name: 'ArticleList',
+  components: {
+    // 加载频道列表组件
+    ArticleChannel
+  },
   data () {
     return {
       tableData: [], // 数据列表
@@ -115,7 +122,7 @@ export default {
           label: '已删除'
         }
       ],
-      channels: [], // 频道列表
+      // channels: [], // 频道列表
       filterParams: { // 文章查询条件参数
         status: '', // 文章状态
         channel_id: '', // 频道id
@@ -129,8 +136,6 @@ export default {
   created () {
     // 加载文章列表
     this.loadArticles()
-    // 加载频道列表
-    this.loadChannels()
   },
   methods: {
     // 获取文章展示数据
@@ -159,16 +164,6 @@ export default {
         this.tableData = data.results // 列表数据
         this.totalCount = data.total_count// 数据总数
         this.articleLoading = false// 请求完成分页能点&表格显示
-      })
-    },
-    // 获取频道列表
-    loadChannels () {
-      this.$http({
-        method: 'GET',
-        url: '/channels'
-      }).then(data => {
-        this.channels = data.channels
-        // console.log(data.channels)
       })
     },
     // 查询
