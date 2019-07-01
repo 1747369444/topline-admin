@@ -7,7 +7,7 @@
         <el-button type="primary" @click="handlePublish(true)">存入草稿</el-button>
       </div>
     </div>
-    <el-form>
+    <el-form v-loading="$route.name === 'publish-edit' && editLoading">
       <el-form-item>
         <el-input type="text" v-model="articleForm.title" placeholder="标题"></el-input>
       </el-form-item>
@@ -64,7 +64,8 @@ export default {
         },
         channel_id: '' // 频道
       },
-      editorOption: {} // 富文本编辑器相关参数选项
+      editorOption: {}, // 富文本编辑器相关参数选项
+      editLoading: false
     }
   },
   computed: {
@@ -73,11 +74,30 @@ export default {
     }
   },
 
+  created () {
+    if (this.$route.name === 'publish-edit') {
+      this.loadArticle()
+    }
+  },
+
   mounted () {
     console.log('this is current quill instance object', this.editor)
   },
 
   methods: {
+    loadArticle () {
+      this.editLoading = true
+      this.$http({
+        method: 'GET',
+        url: `/articles/${this.$route.params.id}`
+      }).then(data => {
+        this.articleForm = data
+        this.editLoading = false
+      }).catch(err => {
+        console.log(err)
+        this.$message.error('加载文章详情失败')
+      })
+    },
     handlePublish (draft = false) {
       this.$http({
         method: 'POST',
