@@ -55,10 +55,12 @@ import { quillEditor } from 'vue-quill-editor'
 
 export default {
   name: 'publish',
+
   components: {
     ArticleChannel,
     quillEditor
   },
+
   data () {
     return {
       articleForm: {
@@ -72,9 +74,27 @@ export default {
       },
       editorOption: {}, // 富文本编辑器相关参数选项
       editLoading: false,
-      publishLoading: false
+      formDirty: false
     }
   },
+  /**
+   * 监视器，我们可以监视组件实例中的成员
+   * 当成员发生改变的时候，监视函数会被调用
+   * 注意：这里配置的监视会无法取消，会重复监视
+   *       如果需要有一个可以取消的监视，则需要通过 this.$watch 的方式进行监视了
+   */
+  watch: {
+    articleForm: {
+      handler () { // 当被监视数据发生改变的时候会被调用
+        // console.log('123')
+        this.formDirty = true
+      },
+      deep: true// 对象、数组类型需要配置深度监视，如果是普通数据不需要
+      // immediate: true或false // 默认只有当被监视成员发生改变的时候才会调用监视函数，
+      //  如果希望初始的时候就调用一次，则可以配置该值为 true
+    }
+  },
+
   computed: {
     editor () {
       return this.$refs.myQuillEditor.quill
@@ -164,6 +184,29 @@ export default {
         console.log(err)
         this.$message.error('发布失败')
       })
+    }
+  },
+  /**
+   * 当要从当前导航到另一个路由的时候被触发
+   * 我们可以在这里控制路由离开的行为
+   * 例如当前页面如果有未保存的数据，我们就提示用户
+   * to 要去哪里
+   * from 来自哪里
+   * next 就是允许通过的方法
+   */
+  beforeRouteLeave (to, from, next) {
+    // 如果表单没有被用户修改过，则让导航直接通过
+    if (!this.formDirty) {
+      return next()
+    }
+
+    const answer = window.confirm('当前有未保存的数据，确认离开当前页吗？')
+    if (answer) {
+      // 正常往后进行导航
+      next()
+    } else {
+      // 取消当前导航
+      next(false)
     }
   }
 }
