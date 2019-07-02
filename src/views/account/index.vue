@@ -51,10 +51,10 @@
           action="http://ttapi.research.itcast.cn/mp/v1_0/user/photo"
           :show-file-list="false"
           :on-success="handleAvatarSuccess"
-         :before-upload="beforeAvatarUpload"
+          :before-upload="beforeAvatarUpload"
           :http-request="handleUpload"
         >
-          <img class="avatar" v-if="userInfo.photo" :src="userInfo.photo">
+          <img class="avatar" v-if="userInfo.photo" :src="userInfo.photo" />
           <i v-else class="el-icon-plus avatar-uploader-icon"></i>
         </el-upload>
       </el-col>
@@ -93,7 +93,9 @@ export default {
           intro,
           email
         }
-      }).then(() => {
+      }).then(data => {
+        // 提交 mutation，修改容器中用户信息
+        this.$store.commit('changeUser', data)
         this.$message({
           type: 'success',
           message: '更新用户信息成功'
@@ -118,6 +120,8 @@ export default {
         data: formData
       }).then(data => {
         this.userInfo.photo = data.photo
+        // 将修改之后的照片信息同步到容器中
+        this.$store.commit('changeUser', this.userInfo)
         this.$message({
           type: 'success',
           message: '上传成功'

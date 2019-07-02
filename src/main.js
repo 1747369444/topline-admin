@@ -11,6 +11,8 @@ import 'nprogress/nprogress.css'
 import axios from 'axios'
 // 引入JSONbig处理不安全整数范围
 import JSONbig from 'json-bigint'
+// 引入vuex
+import store from './store'
 
 // 配置基础路由
 Vue.prototype.$http = axios
@@ -79,5 +81,6 @@ Vue.config.productionTip = false
 
 new Vue({
   router,
+  store,
   render: h => h(App)
 }).$mount('#app')
